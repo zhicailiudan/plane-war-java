@@ -1,0 +1,304 @@
+@startuml
+'https://plantuml.com/class-diagram
+' 实验一：基础架构与继承体系
+' 实现内容：单例模式、4 种敌机、5 种道具、继承体系
+
+skinparam classAttributeIconSize 0
+
+' ==================== 基础抽象类 ====================
+abstract class AbstractFlyingObject
+{
+    # locationX: int
+    # locationY: int
+    # speedX: int
+    # speedY: int
+    # image: BufferedImage
+    # width: int
+    # height: int
+    # isValid: boolean
+    
+    + AbstractFlyingObject(int locationX, int locationY, int speedX, int speedY)
+    + forward(): void
+    + crash(AbstractFlyingObject flyingObject): boolean
+    + setLocation(double locationX, double locationY): void
+    + getLocationX(): int
+    + getLocationY(): int
+    + getSpeedY(): int
+    + getImage(): BufferedImage
+    + getWidth(): int
+    + getHeight(): int
+    + notValid(): boolean
+    + vanish(): void
+}
+
+abstract class AbstractAircraft
+{
+    # maxHp: int
+    # hp: int
+    # power: int
+    # score: int
+    
+    + AbstractAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+    + decreaseHp(int decrease): void
+    + getHp(): int
+    + getMaxHp(): int
+    + getScore(): int
+    + {abstract} shoot(): List<BaseBullet>
+    + {abstract} forward(): void
+}
+
+' ==================== 英雄飞机 ====================
+class HeroAircraft
+{
+    - shootNum: int
+    - power: int
+    - direction: int
+    
+    + HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+}
+
+' ==================== 敌机继承体系 ====================
+abstract class AbstractEnemy
+{
+    # maxHp: int
+    # hp: int
+    # power: int
+    # score: int
+    
+    + AbstractEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + loseHp(int damage): boolean
+    + getHp(): int
+    + getMaxHp(): int
+    + getScore(): int
+    + {abstract} dropSupply(): List<AbstractItem>
+    + {abstract} shoot(): List<BaseBullet>
+    + {abstract} forward(): void
+}
+
+class MobEnemy
+{
+    + MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + dropSupply(): List<AbstractItem>
+}
+
+class EliteEnemy
+{
+    + EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + dropSupply(): List<AbstractItem>
+}
+
+class AceEnemy
+{
+    + AceEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + dropSupply(): List<AbstractItem>
+}
+
+class MasterEnemy
+{
+    + MasterEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + dropSupply(): List<AbstractItem>
+}
+
+' ==================== 子弹继承体系 ====================
+abstract class BaseBullet
+{
+    # power: int
+    
+    + BaseBullet(int locationX, int locationY, int speedX, int speedY, int power)
+    + forward(): void
+    + getPower(): int
+}
+
+class HeroBullet
+{
+    + HeroBullet(int locationX, int locationY, int speedX, int speedY, int power)
+}
+
+class EnemyBullet
+{
+    + EnemyBullet(int locationX, int locationY, int speedX, int speedY, int power)
+}
+
+' ==================== 道具继承体系 ====================
+abstract class AbstractItem
+{
+    # speedY: int
+    
+    + AbstractItem(int locationX, int locationY, int speedY)
+    + forward(): void
+    + {abstract} applyEffect(HeroAircraft hero): void
+}
+
+class BloodItem
+{
+    + BloodItem(int locationX, int locationY, int speedY)
+    + applyEffect(HeroAircraft hero): void
+}
+
+class BulletItem
+{
+    + BulletItem(int locationX, int locationY, int speedY)
+    + applyEffect(HeroAircraft hero): void
+}
+
+class BulletPlusItem
+{
+    + BulletPlusItem(int locationX, int locationY, int speedY)
+    + applyEffect(HeroAircraft hero): void
+}
+
+class BombItem
+{
+    + BombItem(int locationX, int locationY, int speedY)
+    + applyEffect(HeroAircraft hero): void
+}
+
+class FreezeItem
+{
+    + FreezeItem(int locationX, int locationY, int speedY)
+    + applyEffect(HeroAircraft hero): void
+}
+
+' ==================== 单例模式 ====================
+class HeroAircraftCreate
+{
+    - instance: HeroAircraftCreate
+    - heroAircraft: HeroAircraft
+    
+    - HeroAircraftCreate()
+    + getInstance(): HeroAircraftCreate
+    + createHero(): void
+    + getHero(): HeroAircraft
+    + clear(): void
+}
+
+note right of HeroAircraftCreate
+  **单例模式**
+  
+  懒汉式实现
+  双重检查锁 (DCL)
+  volatile 保证可见性
+end note
+
+' ==================== 应用层 ====================
+class Game
+{
+    - heroAircraft: HeroAircraft
+    - enemyAircrafts: List<AbstractEnemy>
+    - heroBullets: List<BaseBullet>
+    - enemyBullets: List<BaseBullet>
+    - enemyMaxNumber: int
+    - enemySpawnCycle: double
+    - shootCycle: double
+    - score: int
+    
+    + Game()
+    + action(): void
+    - tick(): void
+    - shootAction(): void
+    - bulletsMoveAction(): void
+    - aircraftMoveAction(): void
+    - crashCheckAction(): void
+    - postProcessAction(): void
+    - checkResultAction(): void
+    - render(): void
+    - paintScoreAndLife(): void
+}
+
+class Main
+{
+    + WINDOW_WIDTH: int
+    + WINDOW_HEIGHT: int
+    + main(String[] args): void
+}
+
+class ImageManager
+{
+    + BACKGROUND_IMAGE: BufferedImage
+    + HERO_IMAGE: BufferedImage
+    + MOB_ENEMY_IMAGE: BufferedImage
+    + ELITE_ENEMY_IMAGE: BufferedImage
+    + ACE_ENEMY_IMAGE: BufferedImage
+    + MASTER_ENEMY_IMAGE: BufferedImage
+    + HERO_BULLET_IMAGE: BufferedImage
+    + ENEMY_BULLET_IMAGE: BufferedImage
+}
+
+class HeroController
+{
+    + HeroController(Game game, HeroAircraft hero)
+}
+
+' ==================== 继承关系 ====================
+AbstractFlyingObject <|-- AbstractAircraft
+AbstractFlyingObject <|-- BaseBullet
+AbstractFlyingObject <|-- AbstractItem
+
+AbstractAircraft <|-- HeroAircraft
+AbstractAircraft <|-- AbstractEnemy
+
+AbstractEnemy <|-- MobEnemy
+AbstractEnemy <|-- EliteEnemy
+AbstractEnemy <|-- AceEnemy
+AbstractEnemy <|-- MasterEnemy
+
+BaseBullet <|-- HeroBullet
+BaseBullet <|-- EnemyBullet
+
+AbstractItem <|-- BloodItem
+AbstractItem <|-- BulletItem
+AbstractItem <|-- BulletPlusItem
+AbstractItem <|-- BombItem
+AbstractItem <|-- FreezeItem
+
+' ==================== 关联关系 ====================
+HeroAircraftCreate o-- HeroAircraft : creates >
+
+Game o-- HeroAircraft : controls >
+Game o-- AbstractEnemy : manages >
+Game o-- BaseBullet : manages >
+
+Main ..> Game : starts >
+HeroController ..> HeroAircraft : controls >
+
+note bottom of Game
+  游戏主循环
+  
+  - 敌机生成 (普通敌机)
+  - 射击逻辑
+  - 碰撞检测
+  - 后处理 (移除无效对象)
+  - 游戏结束检查
+  - 渲染绘制
+end note
+
+note bottom of AbstractEnemy
+  4 种敌机类型
+  
+  - MobEnemy: 普通敌机
+  - EliteEnemy: 精英敌机
+  - AceEnemy: 王牌敌机
+  - MasterEnemy: 精锐敌机
+end note
+
+note bottom of AbstractItem
+  5 种道具类型
+  
+  - BloodItem: 加血道具
+  - BulletItem: 火力道具
+  - BulletPlusItem: 超级火力
+  - BombItem: 炸弹道具
+  - FreezeItem: 冰冻道具
+end note
+
+@enduml

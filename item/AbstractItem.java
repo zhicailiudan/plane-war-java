@@ -1,26 +1,26 @@
-package item
+package edu.hitsz.item;
 
 import edu.hitsz.basic.AbstractFlyingObject;
 import edu.hitsz.aircraft.HeroAircraft;
-import java.util.List;
 
+public abstract class AbstractItem extends AbstractFlyingObject {
 
-public abstract class AbstractItem extends AcstraactFltingObject(){
     private int speedY;
 
-    public AbstractItem (int locationX, int locationY,int speedY) {
-        super(locationX,locationY);
+    public AbstractItem(int locationX, int locationY, int speedY) {
+        super(locationX, locationY, 0, speedY);
         this.speedY = speedY;
     }
 
     @Override
     public void forward() {
-        this.setLocation(this.getLocationX(),this.getLocationY()+speedY);
-
-        if (this.getLocationY()>WINDOW_HEIGHT) {
+        locationY += speedY;
+        if (locationY > WINDOW_HEIGHT) {
             vanish();
         }
     }
 
     public abstract void applyEffect(HeroAircraft hero);
+
+    public abstract String getItemTypeName();
 }

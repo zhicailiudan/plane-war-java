@@ -1,0 +1,296 @@
+@startuml
+'https://plantuml.com/class-diagram
+' 实验二：策略模式与道具系统 UML 类图
+' 实现目标：敌机攻击、道具生成、道具生效、道具效果（策略模式应用）
+
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+
+' ==================== 策略模式核心 ====================
+interface BulletShootStrategy
+{
+    + shoot(AbstractAircraft aircraft): List<BaseBullet>
+}
+
+class SingleStraightShoot
+{
+    - SHOOT_NUM: int
+    - POWER: int
+    - SHOOT_INTERVAL: int
+    - shootCounter: int
+    
+    + shoot(AbstractAircraft aircraft): List<BaseBullet>
+}
+
+class DoubleStraightShoot
+{
+    - SHOOT_NUM: int
+    - POWER: int
+    - SHOOT_INTERVAL: int
+    - shootCounter: int
+    
+    + shoot(AbstractAircraft aircraft): List<BaseBullet>
+}
+
+class FanScatterShoot
+{
+    - SHOOT_NUM: int
+    - POWER: int
+    - SHOOT_INTERVAL: int
+    - SCATTER_ANGLE: double
+    - shootCounter: int
+    
+    + shoot(AbstractAircraft aircraft): List<BaseBullet>
+}
+
+class TripleStraightShoot
+{
+    - SHOOT_NUM: int
+    - POWER: int
+    - SHOOT_INTERVAL: int
+    - shootCounter: int
+    
+    + shoot(AbstractAircraft aircraft): List<BaseBullet>
+}
+
+class FiveFanScatterShoot
+{
+    - SHOOT_NUM: int
+    - POWER: int
+    - SHOOT_INTERVAL: int
+    - SCATTER_ANGLE: double
+    - shootCounter: int
+    
+    + shoot(AbstractAircraft aircraft): List<BaseBullet>
+}
+
+class CircleShootStrategy
+{
+    - BULLET_NUM: int
+    - POWER: int
+    - SHOOT_INTERVAL: int
+    - SPEED: int
+    - shootCounter: int
+    
+    + shoot(AbstractAircraft aircraft): List<BaseBullet>
+}
+
+interface FirePowerStrategy
+{
+    + apply(HeroAircraft hero): void
+    + cancel(HeroAircraft hero): void
+}
+
+class BulletFirePower
+{
+    + apply(HeroAircraft hero): void
+    + cancel(HeroAircraft hero): void
+}
+
+class BulletPlusFirePower
+{
+    + apply(HeroAircraft hero): void
+    + cancel(HeroAircraft hero): void
+}
+
+' ==================== 飞机类（使用策略） ====================
+abstract class AbstractAircraft
+{
+    # shootStrategy: BulletShootStrategy
+    # power: int
+    
+    + setShootStrategy(BulletShootStrategy): void
+    + shoot(): List<BaseBullet>
+}
+
+class HeroAircraft
+{
+    - fireLevel: int
+    
+    + powerUp(int level): void
+    + powerDown(): void
+    + shoot(): List<BaseBullet>
+}
+
+class EliteEnemy
+{
+    + shoot(): List<BaseBullet>
+}
+
+class MasterEnemy
+{
+    + shoot(): List<BaseBullet>
+}
+
+class AceEnemy
+{
+    + shoot(): List<BaseBullet>
+}
+
+class BossEnemy
+{
+    + shoot(): List<BaseBullet>
+}
+
+' ==================== 道具体系 ====================
+abstract class AbstractItem
+{
+    + {abstract} applyEffect(HeroAircraft hero): void
+    + {abstract} getItemTypeName(): String
+}
+
+class BloodItem
+{
+    + applyEffect(HeroAircraft hero): void
+}
+
+class BulletItem
+{
+    + applyEffect(HeroAircraft hero): void
+}
+
+class BulletPlusItem
+{
+    + applyEffect(HeroAircraft hero): void
+}
+
+class BombItem
+{
+    + applyEffect(HeroAircraft hero): void
+}
+
+class FreezeItem
+{
+    + applyEffect(HeroAircraft hero): void
+}
+
+enum ItemType
+{
+    BLOOD
+    BOMB
+    BULLET
+    BULLET_PLUS
+    FREEZE
+}
+
+' ==================== 工厂类 ====================
+class ItemFactory
+{
+    + createItem(ItemType, int, int, int): AbstractItem
+    + createRandomItem(ItemType[], int, int): AbstractItem
+}
+
+class EnemyFactory
+{
+    + createRandomNormalEnemy(): AbstractEnemy
+}
+
+' ==================== 游戏逻辑 ====================
+class Game
+{
+    - heroAircraft: HeroAircraft
+    - enemyAircrafts: List<AbstractEnemy>
+    - heroBullets: List<BaseBullet>
+    - enemyBullets: List<BaseBullet>
+    - items: List<AbstractItem>
+    - score: int
+    - BOSS_SPAWN_SCORE: int
+    - bossSpawned: boolean
+    
+    - tick(): void
+    - shootAction(): void
+    - crashCheckAction(): void
+    - postProcessAction(): void
+}
+
+' ==================== 基础类（简化显示） ====================
+abstract class AbstractFlyingObject
+{
+    # locationX: int
+    # locationY: int
+    # speedX: int
+    # speedY: int
+    # isValid: boolean
+    
+    + forward(): void
+    + crash(AbstractFlyingObject): boolean
+    + vanish(): void
+    + notValid(): boolean
+}
+
+abstract class BaseBullet
+{
+    # power: int
+    + getPower(): int
+}
+
+class HeroBullet
+{
+}
+
+class EnemyBullet
+{
+}
+
+abstract class AbstractEnemy
+{
+    + {abstract} dropSupply(): List<AbstractItem>
+    + getScore(): int
+}
+
+' ==================== 继承关系 ====================
+AbstractFlyingObject <|-- AbstractAircraft
+AbstractFlyingObject <|-- BaseBullet
+AbstractFlyingObject <|-- AbstractItem
+
+AbstractAircraft <|-- HeroAircraft
+AbstractAircraft <|-- AbstractEnemy
+
+AbstractEnemy <|-- EliteEnemy
+AbstractEnemy <|-- MasterEnemy
+AbstractEnemy <|-- AceEnemy
+AbstractEnemy <|-- BossEnemy
+
+BaseBullet <|-- HeroBullet
+BaseBullet <|-- EnemyBullet
+
+AbstractItem <|-- BloodItem
+AbstractItem <|-- BulletItem
+AbstractItem <|-- BulletPlusItem
+AbstractItem <|-- BombItem
+AbstractItem <|-- FreezeItem
+
+' ==================== 策略模式关系 ====================
+BulletShootStrategy <|.. SingleStraightShoot
+BulletShootStrategy <|.. DoubleStraightShoot
+BulletShootStrategy <|.. FanScatterShoot
+BulletShootStrategy <|.. TripleStraightShoot
+BulletShootStrategy <|.. FiveFanScatterShoot
+BulletShootStrategy <|.. CircleShootStrategy
+
+FirePowerStrategy <|.. BulletFirePower
+FirePowerStrategy <|.. BulletPlusFirePower
+
+AbstractAircraft o-- BulletShootStrategy : uses >
+HeroAircraft o-- FirePowerStrategy : uses >
+
+' ==================== 策略分配关系 ====================
+EliteEnemy ..> SingleStraightShoot : uses >
+MasterEnemy ..> DoubleStraightShoot : uses >
+AceEnemy ..> FanScatterShoot : uses >
+BossEnemy ..> CircleShootStrategy : uses >
+
+HeroAircraft ..> TripleStraightShoot : fireLevel=1 >
+HeroAircraft ..> FiveFanScatterShoot : fireLevel=2 >
+HeroAircraft ..> CircleShootStrategy : fireLevel=3 >
+
+' ==================== 关联关系 ====================
+Game o-- HeroAircraft : controls >
+Game o-- AbstractEnemy : manages >
+Game o-- BaseBullet : manages >
+Game o-- AbstractItem : manages >
+
+ItemFactory ..> AbstractItem : creates >
+ItemFactory ..> ItemType : uses >
+
+@enduml

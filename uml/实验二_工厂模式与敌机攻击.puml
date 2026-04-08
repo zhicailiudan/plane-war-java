@@ -1,0 +1,386 @@
+@startuml
+'https://plantuml.com/class-diagram
+' 实验二：工厂模式与敌机攻击
+' 开发目标：
+' ① UML 类图设计 - 简单工厂模式与工厂方法模式
+' ② 设计模式应用 - 简单工厂实现道具创建，工厂方法实现敌机创建
+' ③ 敌机生成 - 4 种敌机按周期随机出现
+' ④ 敌机移动 - 精锐和王牌可左右移动
+' ⑤ 敌机攻击 - 精锐双排子弹，王牌扇形散射
+' ⑥ 道具生成 - 击毁时概率掉落
+' ⑦ 道具效果 - 控制台输出提示
+
+skinparam classAttributeIconSize 0
+
+' ==================== 基础抽象类 ====================
+abstract class AbstractFlyingObject
+{
+    # locationX: int
+    # locationY: int
+    # speedX: int
+    # speedY: int
+    # image: BufferedImage
+    # isValid: boolean
+    
+    + AbstractFlyingObject(int, int, int, int)
+    + forward(): void
+    + crash(AbstractFlyingObject): boolean
+    + getLocationX(): int
+    + getLocationY(): int
+    + notValid(): boolean
+    + vanish(): void
+}
+
+abstract class AbstractAircraft
+{
+    # hp: int
+    # maxHp: int
+    # power: int
+    # score: int
+    
+    + AbstractAircraft(int, int, int, int, int)
+    + decreaseHp(int): void
+    + getHp(): int
+    + getScore(): int
+    + {abstract} shoot(): List<BaseBullet>
+    + {abstract} forward(): void
+}
+
+abstract class BaseBullet
+{
+    # power: int
+    
+    + BaseBullet(int, int, int, int, int)
+    + forward(): void
+    + getPower(): int
+}
+
+abstract class AbstractItem
+{
+    # speedY: int
+    
+    + AbstractItem(int, int, int)
+    + forward(): void
+    + {abstract} applyEffect(HeroAircraft): void
+}
+
+' ==================== 英雄飞机 ====================
+class HeroAircraft
+{
+    - shootNum: int
+    - power: int
+    - direction: int
+    
+    + HeroAircraft(int, int, int, int, int)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+}
+
+' ==================== 敌机体系 ====================
+abstract class AbstractEnemy
+{
+    + {abstract} dropSupply(): List<AbstractItem>
+}
+
+class MobEnemy
+{
+    + MobEnemy(int, int, int, int, int)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + dropSupply(): List<AbstractItem>
+}
+
+class EliteEnemy
+{
+    + EliteEnemy(int, int, int, int, int)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + dropSupply(): List<AbstractItem>
+}
+
+class AceEnemy
+{
+    + AceEnemy(int, int, int, int, int)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + dropSupply(): List<AbstractItem>
+}
+
+class MasterEnemy
+{
+    + MasterEnemy(int, int, int, int, int)
+    + forward(): void
+    + shoot(): List<BaseBullet>
+    + dropSupply(): List<AbstractItem>
+}
+
+note right of MasterEnemy
+  **精锐敌机**
+  - 左右移动
+  - 双排子弹
+  - 掉落 4 种道具
+end note
+
+note right of AceEnemy
+  **王牌敌机**
+  - 左右移动
+  - 扇形散射 (3 发)
+  - 掉落 5 种道具
+end note
+
+' ==================== 子弹体系 ====================
+class HeroBullet
+{
+    + HeroBullet(int, int, int, int, int)
+}
+
+class EnemyBullet
+{
+    + EnemyBullet(int, int, int, int, int)
+}
+
+' ==================== 道具体系 ====================
+class BloodItem
+{
+    + BloodItem(int, int, int)
+    + applyEffect(HeroAircraft): void
+}
+
+class BulletItem
+{
+    + BulletItem(int, int, int)
+    + applyEffect(HeroAircraft): void
+}
+
+class BulletPlusItem
+{
+    + BulletPlusItem(int, int, int)
+    + applyEffect(HeroAircraft): void
+}
+
+class BombItem
+{
+    + BombItem(int, int, int)
+    + applyEffect(HeroAircraft): void
+}
+
+class FreezeItem
+{
+    + FreezeItem(int, int, int)
+    + applyEffect(HeroAircraft): void
+}
+
+enum ItemType
+{
+    BLOOD
+    BOMB
+    BULLET
+    BULLET_PLUS
+    FREEZE
+}
+
+note bottom of ItemType
+  5 种道具类型
+end note
+
+' ==================== 单例模式 ====================
+class HeroAircraftCreate
+{
+    - instance: HeroAircraftCreate
+    - heroAircraft: HeroAircraft
+    
+    - HeroAircraftCreate()
+    + getInstance(): HeroAircraftCreate
+    + createHero(): void
+    + getHero(): HeroAircraft
+    + clear(): void
+}
+
+note right of HeroAircraftCreate
+  **单例模式**
+  懒汉式 + 双重检查锁
+end note
+
+' ==================== 简单工厂模式 - 道具 ====================
+class ItemFactory
+{
+    - random: Random
+    
+    + createItem(ItemType type, int x, int y): AbstractItem
+    + createRandomItem(ItemType[] types, int x, int y): AbstractItem
+}
+
+note right of ItemFactory
+  **简单工厂模式**
+  
+  根据 ItemType 枚举
+  创建对应道具对象
+  
+  优点：
+  - 客户端无需知道
+    具体产品类
+  - 集中管理创建逻辑
+end note
+
+' ==================== 工厂方法模式 - 敌机 ====================
+class EnemyFactory
+{
+    - random: Random
+    - NORMAL_ENEMY_TYPES: EnemyAircraftType[]
+    
+    + createEnemy(EnemyAircraftType type): AbstractEnemy
+    + createRandomNormalEnemy(): AbstractEnemy
+}
+
+enum EnemyAircraftType
+{
+    MOB
+    ELITE
+    ACE
+    MASTER
+}
+
+note right of EnemyFactory
+  **工厂方法模式**
+  
+  根据 EnemyAircraftType
+  创建对应敌机对象
+  
+  优点：
+  - 符合开闭原则
+  - 易于扩展新敌机
+end note
+
+' ==================== 应用层 ====================
+class Game
+{
+    - heroAircraft: HeroAircraft
+    - enemyAircrafts: List<AbstractEnemy>
+    - heroBullets: List<BaseBullet>
+    - enemyBullets: List<BaseBullet>
+    - enemyMaxNumber: int
+    - enemySpawnCycle: double
+    - shootCycle: double
+    - score: int
+    
+    + Game()
+    + action(): void
+    - tick(): void
+    - spawnEnemy(): void
+    - shootAction(): void
+    - bulletsMoveAction(): void
+    - aircraftMoveAction(): void
+    - crashCheckAction(): void
+    - checkHeroBulletHit(): void
+    - checkItemPickup(): void
+    - postProcessAction(): void
+    - render(): void
+}
+
+class Main
+{
+    + WINDOW_WIDTH: int
+    + WINDOW_HEIGHT: int
+    + main(String[] args): void
+}
+
+class ImageManager
+{
+    + BACKGROUND_IMAGE: BufferedImage
+    + HERO_IMAGE: BufferedImage
+    + MOB_ENEMY_IMAGE: BufferedImage
+    + ELITE_ENEMY_IMAGE: BufferedImage
+    + ACE_ENEMY_IMAGE: BufferedImage
+    + MASTER_ENEMY_IMAGE: BufferedImage
+    + HERO_BULLET_IMAGE: BufferedImage
+    + ENEMY_BULLET_IMAGE: BufferedImage
+}
+
+class HeroController
+{
+    + HeroController(Game game, HeroAircraft hero)
+}
+
+' ==================== 继承关系 ====================
+AbstractFlyingObject <|-- AbstractAircraft
+AbstractFlyingObject <|-- BaseBullet
+AbstractFlyingObject <|-- AbstractItem
+
+AbstractAircraft <|-- HeroAircraft
+AbstractAircraft <|-- AbstractEnemy
+
+AbstractEnemy <|-- MobEnemy
+AbstractEnemy <|-- EliteEnemy
+AbstractEnemy <|-- AceEnemy
+AbstractEnemy <|-- MasterEnemy
+
+BaseBullet <|-- HeroBullet
+BaseBullet <|-- EnemyBullet
+
+AbstractItem <|-- BloodItem
+AbstractItem <|-- BulletItem
+AbstractItem <|-- BulletPlusItem
+AbstractItem <|-- BombItem
+AbstractItem <|-- FreezeItem
+
+' ==================== 模式关系 ====================
+HeroAircraftCreate o-- HeroAircraft : creates >
+
+ItemFactory ..> AbstractItem : creates >
+ItemFactory ..> ItemType : uses >
+
+EnemyFactory ..> AbstractEnemy : creates >
+EnemyFactory ..> EnemyAircraftType : uses >
+
+' ==================== 关联关系 ====================
+Game o-- HeroAircraft : controls >
+Game o-- AbstractEnemy : manages >
+Game o-- BaseBullet : manages >
+Game o-- AbstractItem : manages >
+
+Game ..> EnemyFactory : uses >
+Game ..> ItemFactory : uses >
+
+Main ..> Game : starts >
+HeroController ..> HeroAircraft : controls >
+
+' ==================== 注释说明 ====================
+note bottom of Game
+  **游戏主循环**
+  
+  - 敌机生成 (工厂方法)
+  - 敌机射击 (精英/精锐/王牌)
+  - 道具掉落 (简单工厂)
+  - 碰撞检测
+  - 道具拾取
+end note
+
+note bottom of AbstractEnemy
+  **4 种敌机特性**
+  
+  MobEnemy: 普通敌机，不射击
+  EliteEnemy: 精英敌机，单排子弹
+  MasterEnemy: 精锐敌机，双排子弹，左右移动
+  AceEnemy: 王牌敌机，扇形散射，左右移动
+end note
+
+note bottom of AbstractItem
+  **道具效果**
+  
+  BloodItem: 恢复 50 血量
+  BulletItem: 火力升级，打印提示
+  BulletPlusItem: 超级火力，打印提示
+  BombItem: 清除敌机，打印提示
+  FreezeItem: 冻结敌机，打印提示
+end note
+
+note right of Game
+  **敌机生成逻辑**
+  
+  - 按周期随机生成
+  - 4 种类型随机选择
+  - 最大数量限制
+  - 不包含 Boss
+end note
+
+@enduml

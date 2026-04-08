@@ -1,39 +1,42 @@
-package factory;
+package edu.hitsz.factory;
 
-import item.*;
-import item.ItemType;
+import edu.hitsz.item.AbstractItem;
+import edu.hitsz.item.BloodItem;
+import edu.hitsz.item.BombItem;
+import edu.hitsz.item.BulletItem;
+import edu.hitsz.item.BulletPlusItem;
+import edu.hitsz.item.FreezeItem;
+import edu.hitsz.item.ItemType;
 import java.util.Random;
 
-/**
- * 道具简单工厂（适配所有5种道具创建，支持随机生成指定范围的道具）
- */
 public class ItemFactory {
     private static final Random random = new Random();
 
-    public static AbstractItem createItem(ItemType type, int x, int y) {
+    public static AbstractItem createItem(ItemType type, int x, int y, int speedY) {
         switch (type) {
             case BULLET:
-                return new BulletItem(x, y);
+                return new BulletItem(x, y, speedY);
             case BLOOD:
-                return new BloodItem(x, y);
+                return new BloodItem(x, y, speedY);
             case BOMB:
-                return new BombItem(x, y);
+                return new BombItem(x, y, speedY);
             case BULLET_PLUS:
-                return new BulletPlusItem(x, y);
+                return new BulletPlusItem(x, y, speedY);
             case FREEZE:
-                return new FreezeItem(x, y);
+                return new FreezeItem(x, y, speedY);
             default:
                 return null;
         }
     }
 
+    public static AbstractItem createItem(ItemType type, int x, int y) {
+        return createItem(type, x, y, 5);
+    }
 
     public static AbstractItem createRandomItem(ItemType[] availableTypes, int x, int y) {
-        // 边界校验：可选类型为空则返回null
         if (availableTypes == null || availableTypes.length == 0) {
             return null;
         }
-        // 随机选一种道具类型
         ItemType randomType = availableTypes[random.nextInt(availableTypes.length)];
         return createItem(randomType, x, y);
     }

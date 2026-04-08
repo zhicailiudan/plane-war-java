@@ -1,0 +1,441 @@
+@startuml
+'https://plantuml.com/class-diagram
+' 实验三：完整游戏系统 UML 类图
+' 实现目标：Boss 生成、完整碰撞检测、道具系统、策略模式整合
+
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam packageStyle rectangle
+
+' ==================== 应用层 ====================
+package "application" {
+    class Main
+    {
+        + WINDOW_WIDTH: int = 400
+        + WINDOW_HEIGHT: int = 700
+        + main(String[] args): void
+    }
+    
+    class Game
+    {
+        - heroAircraft: HeroAircraft
+        - enemyAircrafts: List<AbstractEnemy>
+        - heroBullets: List<BaseBullet>
+        - enemyBullets: List<BaseBullet>
+        - items: List<AbstractItem>
+        - enemyMaxNumber: int = 5
+        - enemySpawnCycle: double = 20
+        - shootCycle: double = 20
+        - score: int
+        - BOSS_SPAWN_SCORE: int = 1000
+        - bossSpawned: boolean
+        - gameOverFlag: boolean
+        - timeInterval: int = 40
+        
+        + Game()
+        + action(): void
+        - tick(): void
+        - spawnEnemy(): void
+        - spawnBoss(): void
+        - shootAction(): void
+        - bulletsMoveAction(): void
+        - aircraftMoveAction(): void
+        - crashCheckAction(): void
+        - checkHeroBulletHit(): void
+        - checkEnemyBulletHit(): void
+        - checkItemPickup(): void
+        - postProcessAction(): void
+        - checkResultAction(): void
+        - render(): void
+        - paintScoreAndLife(): void
+    }
+    
+    class HeroController
+    {
+        + HeroController(Game game, HeroAircraft hero)
+    }
+    
+    class ImageManager
+    {
+        + BACKGROUND_IMAGE: BufferedImage
+        + HERO_IMAGE: BufferedImage
+        + MOB_ENEMY_IMAGE: BufferedImage
+        + ELITE_ENEMY_IMAGE: BufferedImage
+        + ACE_ENEMY_IMAGE: BufferedImage
+        + MASTER_ENEMY_IMAGE: BufferedImage
+        + BOSS_ENEMY_IMAGE: BufferedImage
+        + HERO_BULLET_IMAGE: BufferedImage
+        + ENEMY_BULLET_IMAGE: BufferedImage
+        + BLOOD_ITEM_IMAGE: BufferedImage
+        + BULLET_ITEM_IMAGE: BufferedImage
+        + BULLET_PLUS_ITEM_IMAGE: BufferedImage
+        + BOMB_ITEM_IMAGE: BufferedImage
+        + FREEZE_ITEM_IMAGE: BufferedImage
+    }
+}
+
+' ==================== 飞机体系 ====================
+package "aircraft" {
+    abstract class AbstractAircraft
+    {
+        # maxHp: int
+        # hp: int
+        # power: int
+        # score: int
+        # shootStrategy: BulletShootStrategy
+        
+        + AbstractAircraft(int, int, int, int, int)
+        + decreaseHp(int): void
+        + getHp(): int
+        + setHp(int): void
+        + getMaxHp(): int
+        + getScore(): int
+        + setShootStrategy(BulletShootStrategy): void
+        + shoot(): List<BaseBullet>
+        + {abstract} forward(): void
+    }
+    
+    class HeroAircraft
+    {
+        - fireLevel: int
+        
+        + HeroAircraft(int, int, int, int, int)
+        + forward(): void
+        + shoot(): List<BaseBullet>
+        + powerUp(int level): void
+        + powerDown(): void
+        + getFireLevel(): int
+    }
+    
+    abstract class AbstractEnemy
+    {
+        + {abstract} dropSupply(): List<AbstractItem>
+    }
+    
+    class MobEnemy
+    {
+        + MobEnemy(int, int, int, int, int)
+        + forward(): void
+        + shoot(): List<BaseBullet>
+        + dropSupply(): List<AbstractItem>
+    }
+    
+    class EliteEnemy
+    {
+        + EliteEnemy(int, int, int, int, int)
+        + forward(): void
+        + shoot(): List<BaseBullet>
+        + dropSupply(): List<AbstractItem>
+    }
+    
+    class MasterEnemy
+    {
+        + MasterEnemy(int, int, int, int, int)
+        + forward(): void
+        + shoot(): List<BaseBullet>
+        + dropSupply(): List<AbstractItem>
+    }
+    
+    class AceEnemy
+    {
+        + AceEnemy(int, int, int, int, int)
+        + forward(): void
+        + shoot(): List<BaseBullet>
+        + dropSupply(): List<AbstractItem>
+    }
+    
+    class BossEnemy
+    {
+        + BossEnemy(int, int, int, int, int)
+        + forward(): void
+        + shoot(): List<BaseBullet>
+        + dropSupply(): List<AbstractItem>
+    }
+    
+    class HeroAircraftCreate
+    {
+        - instance: HeroAircraftCreate
+        - heroAircraft: HeroAircraft
+        
+        - HeroAircraftCreate()
+        + getInstance(): HeroAircraftCreate
+        + createHero(): void
+        + getHero(): HeroAircraft
+        + clear(): void
+    }
+    
+    enum EnemyAircraftType
+    {
+        MOB
+        ELITE
+        ACE
+        MASTER
+        BOSS
+    }
+}
+
+' ==================== 子弹体系 ====================
+package "bullet" {
+    abstract class BaseBullet
+    {
+        # power: int
+        
+        + BaseBullet(int, int, int, int, int)
+        + forward(): void
+        + getPower(): int
+    }
+    
+    class HeroBullet
+    {
+        + HeroBullet(int, int, int, int, int)
+    }
+    
+    class EnemyBullet
+    {
+        + EnemyBullet(int, int, int, int, int)
+    }
+}
+
+' ==================== 道具体系 ====================
+package "item" {
+    abstract class AbstractItem
+    {
+        # speedY: int
+        
+        + AbstractItem(int, int, int)
+        + forward(): void
+        + {abstract} applyEffect(HeroAircraft): void
+        + {abstract} getItemTypeName(): String
+    }
+    
+    class BloodItem
+    {
+        + BloodItem(int, int, int)
+        + applyEffect(HeroAircraft): void
+        + getItemTypeName(): String
+    }
+    
+    class BulletItem
+    {
+        + BulletItem(int, int, int)
+        + applyEffect(HeroAircraft): void
+        + getItemTypeName(): String
+    }
+    
+    class BulletPlusItem
+    {
+        + BulletPlusItem(int, int, int)
+        + applyEffect(HeroAircraft): void
+        + getItemTypeName(): String
+    }
+    
+    class BombItem
+    {
+        + BombItem(int, int, int)
+        + applyEffect(HeroAircraft): void
+        + getItemTypeName(): String
+    }
+    
+    class FreezeItem
+    {
+        + FreezeItem(int, int, int)
+        + applyEffect(HeroAircraft): void
+        + getItemTypeName(): String
+    }
+    
+    enum ItemType
+    {
+        BLOOD
+        BOMB
+        BULLET
+        BULLET_PLUS
+        FREEZE
+    }
+}
+
+' ==================== 策略模式 ====================
+package "strategy" {
+    interface BulletShootStrategy
+    {
+        + shoot(AbstractAircraft): List<BaseBullet>
+    }
+    
+    class SingleStraightShoot
+    {
+        + shoot(AbstractAircraft): List<BaseBullet>
+    }
+    
+    class DoubleStraightShoot
+    {
+        + shoot(AbstractAircraft): List<BaseBullet>
+    }
+    
+    class FanScatterShoot
+    {
+        + shoot(AbstractAircraft): List<BaseBullet>
+    }
+    
+    class TripleStraightShoot
+    {
+        + shoot(AbstractAircraft): List<BaseBullet>
+    }
+    
+    class FiveFanScatterShoot
+    {
+        + shoot(AbstractAircraft): List<BaseBullet>
+    }
+    
+    class CircleShootStrategy
+    {
+        + shoot(AbstractAircraft): List<BaseBullet>
+    }
+}
+
+' ==================== 工厂模式 ====================
+package "factory" {
+    class EnemyFactory
+    {
+        - NORMAL_ENEMY_TYPES: EnemyAircraftType[]
+        
+        + createEnemy(EnemyAircraftType): AbstractEnemy
+        + createRandomNormalEnemy(): AbstractEnemy
+        + createEnemy(String): AbstractEnemy
+    }
+    
+    class ItemFactory
+    {
+        + createItem(ItemType, int, int, int): AbstractItem
+        + createItem(ItemType, int, int): AbstractItem
+        + createRandomItem(ItemType[], int, int): AbstractItem
+    }
+}
+
+' ==================== 基础类 ====================
+abstract class AbstractFlyingObject
+{
+    # locationX: int
+    # locationY: int
+    # speedX: int
+    # speedY: int
+    # isValid: boolean
+    
+    + AbstractFlyingObject(int, int, int, int)
+    + forward(): void
+    + crash(AbstractFlyingObject): boolean
+    + setLocation(double, double): void
+    + getLocationX(): int
+    + getLocationY(): int
+    + getSpeedY(): int
+    + notValid(): boolean
+    + vanish(): void
+}
+
+' ==================== 继承关系 ====================
+AbstractFlyingObject <|-- AbstractAircraft
+AbstractFlyingObject <|-- BaseBullet
+AbstractFlyingObject <|-- AbstractItem
+
+AbstractAircraft <|-- HeroAircraft
+AbstractAircraft <|-- AbstractEnemy
+
+AbstractEnemy <|-- MobEnemy
+AbstractEnemy <|-- EliteEnemy
+AbstractEnemy <|-- MasterEnemy
+AbstractEnemy <|-- AceEnemy
+AbstractEnemy <|-- BossEnemy
+
+BaseBullet <|-- HeroBullet
+BaseBullet <|-- EnemyBullet
+
+AbstractItem <|-- BloodItem
+AbstractItem <|-- BulletItem
+AbstractItem <|-- BulletPlusItem
+AbstractItem <|-- BombItem
+AbstractItem <|-- FreezeItem
+
+' ==================== 策略模式关系 ====================
+BulletShootStrategy <|.. SingleStraightShoot
+BulletShootStrategy <|.. DoubleStraightShoot
+BulletShootStrategy <|.. FanScatterShoot
+BulletShootStrategy <|.. TripleStraightShoot
+BulletShootStrategy <|.. FiveFanScatterShoot
+BulletShootStrategy <|.. CircleShootStrategy
+
+AbstractAircraft o-- BulletShootStrategy : uses >
+EliteEnemy ..> SingleStraightShoot : uses >
+MasterEnemy ..> DoubleStraightShoot : uses >
+AceEnemy ..> FanScatterShoot : uses >
+BossEnemy ..> CircleShootStrategy : uses >
+
+' ==================== 单例模式 ====================
+HeroAircraftCreate o-- HeroAircraft : creates >
+note right of HeroAircraftCreate
+    单例模式
+    懒汉式 + 双重检查锁
+end note
+
+' ==================== 工厂模式 ====================
+EnemyFactory ..> AbstractEnemy : creates >
+EnemyFactory ..> EnemyAircraftType : uses >
+ItemFactory ..> AbstractItem : creates >
+ItemFactory ..> ItemType : uses >
+
+note right of EnemyFactory
+    简单工厂模式
+    根据枚举创建敌机
+end note
+
+note right of ItemFactory
+    简单工厂模式
+    根据枚举创建道具
+end note
+
+' ==================== 游戏关联关系 ====================
+Game o-- HeroAircraft : controls >
+Game o-- AbstractEnemy : manages >
+Game o-- BaseBullet : manages >
+Game o-- AbstractItem : manages >
+Game ..> EnemyFactory : uses >
+Game ..> ItemFactory : uses >
+
+Main ..> Game : starts >
+HeroController ..> HeroAircraft : controls >
+
+' ==================== Boss 生成逻辑 ====================
+note right of Game
+    Boss 生成逻辑：
+    1. 分数 >= 1000 时生成
+    2. 仅生成一次
+    3. 悬浮于上方
+    4. 左右移动
+    5. 环射 20 发子弹
+    6. 掉落 3 个随机道具
+end note
+
+' ==================== 道具效果 ====================
+note right of BloodItem
+    恢复 50 血量
+    不超过最大值
+end note
+
+note right of BulletItem
+    切换到散射弹道
+    打印提示信息
+end note
+
+note right of BulletPlusItem
+    切换到环射弹道
+    打印提示信息
+end note
+
+note right of BombItem
+    清除所有敌机
+    打印提示信息
+end note
+
+note right of FreezeItem
+    冻结所有敌机
+    打印提示信息
+end note
+
+@enduml

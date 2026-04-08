@@ -1,4 +1,4 @@
-package item
+package edu.hitsz.item;
 
 public enum ItemType {
     BLOOD,

@@ -1,15 +1,22 @@
-package application;
+package edu.hitsz.application;
 
-import aircraft.AbstractAircraft;
-import aircraft.AbstractEnemy;
-import aircraft.HeroAircraft;
-import aircraft.HeroAircraftCreate;
-import factory.EnemyFactory;
+import edu.hitsz.aircraft.AbstractAircraft;
+import edu.hitsz.aircraft.AbstractEnemy;
+import edu.hitsz.aircraft.BossEnemy;
+import edu.hitsz.aircraft.HeroAircraft;
+import edu.hitsz.aircraft.HeroAircraftCreate;
+import edu.hitsz.basic.AbstractFlyingObject;
+import edu.hitsz.factory.EnemyFactory;
+import edu.hitsz.item.AbstractItem;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.layout.Pane;
-import bullet.BaseBullet;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import edu.hitsz.bullet.BaseBullet;
+import edu.hitsz.application.Main;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -26,6 +33,7 @@ public class Game extends Pane {
     private final List<AbstractEnemy> enemyAircrafts;
     private final List<BaseBullet> heroBullets;
     private final List<BaseBullet> enemyBullets;
+    private final List<AbstractItem> items;
 
     //屏幕中出现的敌机最大数量
     private final int enemyMaxNumber = 5;
@@ -40,6 +48,10 @@ public class Game extends Pane {
 
     //当前玩家分数
     private int score = 0;
+
+    //Boss 生成分数阈值
+    private static final int BOSS_SPAWN_SCORE = 1000;
+    private boolean bossSpawned = false;
 
     //游戏结束标志
     private boolean gameOverFlag = false;
@@ -73,8 +85,8 @@ public class Game extends Pane {
         enemyAircrafts = new LinkedList<>();
         heroBullets = new LinkedList<>();
         enemyBullets = new LinkedList<>();
+        items = new LinkedList<>();
 
-        // 启动英雄机鼠标监听（移动/拖拽即跟随）
         new HeroController(this, heroAircraft);
     }
 
@@ -123,17 +135,23 @@ public class Game extends Pane {
             enemySpawnCounter = 0;
         }
 
-        // 飞机射出子弹
+        if (!bossSpawned && score >= BOSS_SPAWN_SCORE) {
+            BossEnemy boss = new BossEnemy(
+                    Main.WINDOW_WIDTH / 2,
+                    80,
+                    3,
+                    0,
+                    200
+            );
+            enemyAircrafts.add(boss);
+            bossSpawned = true;
+        }
+
         shootAction();
-        // 子弹移动
         bulletsMoveAction();
-        // 飞机移动
         aircraftMoveAction();
-        // 撞击检测
         crashCheckAction();
-        // 后处理（移除消失的飞机/子弹）
         postProcessAction();
-        // 游戏结束检查
         checkResultAction();
     }
 
@@ -144,10 +162,10 @@ public class Game extends Pane {
         shootCounter++;
         if (shootCounter >= shootCycle) {
             shootCounter = 0;
-            //英雄机射击
             heroBullets.addAll(heroAircraft.shoot());
-            // TODO 敌机射击
-            EnemyBullets.addAll(EliteEnemy.shoot());
+            for (AbstractEnemy enemy : enemyAircrafts) {
+                enemyBullets.addAll(enemy.shoot());
+            }
         }
     }
 
@@ -157,6 +175,9 @@ public class Game extends Pane {
         }
         for (BaseBullet bullet : enemyBullets) {
             bullet.forward();
+        }
+        for (AbstractItem item : items) {
+            item.forward();
         }
     }
 
@@ -187,13 +208,14 @@ public class Game extends Pane {
                     continue;
                 }
                 if (enemyAircraft.crash(bullet)) {
-                    // 敌机撞击到英雄机子弹
-                    // 敌机损失一定生命值
                     enemyAircraft.decreaseHp(bullet.getPower());
                     bullet.vanish();
                     if (enemyAircraft.notValid()) {
-                        // TODO 获得分数，产生道具补给
-                        score += 10;
+                        score += enemyAircraft.getScore();
+                        List<AbstractItem> dropItems = enemyAircraft.dropSupply();
+                        if (dropItems != null) {
+                            items.addAll(dropItems);
+                        }
                     }
                 }
                 // 英雄机 与 敌机 相撞，均损毁
@@ -204,21 +226,24 @@ public class Game extends Pane {
             }
         }
 
-        // Todo: 我方获得道具，道具生效
+        for (AbstractItem item : items) {
+            if (item.notValid()) {
+                continue;
+            }
+            if (heroAircraft.crash(item)) {
+                item.applyEffect(heroAircraft);
+                item.vanish();
+                break;
+            }
+        }
 
     }
 
-    /**
-     * 后处理：
-     * 1. 删除无效的子弹
-     * 2. 删除无效的敌机
-     * 3. 删除无效的道具
-     */
     private void postProcessAction() {
         enemyBullets.removeIf(AbstractFlyingObject::notValid);
         heroBullets.removeIf(AbstractFlyingObject::notValid);
         enemyAircrafts.removeIf(AbstractFlyingObject::notValid);
-        // Todo: 删除无效道具
+        items.removeIf(AbstractFlyingObject::notValid);
     }
 
 
@@ -249,12 +274,10 @@ public class Game extends Pane {
             this.backGroundTop = 0;
         }
 
-        // 先绘制子弹，后绘制飞机
         paintImageWithPositionRevised(enemyBullets);
         paintImageWithPositionRevised(heroBullets);
+        paintImageWithPositionRevised(items);
         paintImageWithPositionRevised(enemyAircrafts);
-
-        // Todo: 绘制道具
 
         // 绘制英雄机
         gc.drawImage(

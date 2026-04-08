@@ -11,6 +11,8 @@ public class MobEnemy extends AbstractAircraft {
         super(locationX, locationY, speedX, speedY, hp);
         this.shootStrategy = null;
         this.score = 10;
+        this.maxHp = hp;
+        this.hp = hp;
     }
 
     @Override

@@ -1,27 +1,25 @@
-package factory;
+package edu.hitsz.factory;
 
-import aircraft.AbstractEnemy;
-import aircraft.AceEnemy;
-import aircraft.BossEnemy;
-import aircraft.EliteEnemy;
-import aircraft.EnemyAircraftType; // 导入枚举
-import aircraft.MasterEnemy;
-import aircraft.MobEnemy;
-import application.ImageManager;
-import application.Main;
+import edu.hitsz.aircraft.AbstractEnemy;
+import edu.hitsz.aircraft.AceEnemy;
+import edu.hitsz.aircraft.BossEnemy;
+import edu.hitsz.aircraft.EliteEnemy;
+import edu.hitsz.aircraft.EnemyAircraftType;
+import edu.hitsz.aircraft.MasterEnemy;
+import edu.hitsz.aircraft.MobEnemy;
+import edu.hitsz.application.ImageManager;
+import edu.hitsz.application.Main;
 
 import java.util.Random;
 
 public class EnemyFactory {
     private static final Random random = new Random();
-    // 用枚举定义4种普通敌机（替代原字符串数组）
     private static final EnemyAircraftType[] NORMAL_ENEMY_TYPES = {
             EnemyAircraftType.MOB,
             EnemyAircraftType.ELITE,
             EnemyAircraftType.ACE,
             EnemyAircraftType.MASTER
     };
-
 
     public AbstractEnemy createEnemy(EnemyAircraftType enemyType) {
         int initX = calculateInitX(enemyType);
@@ -36,14 +34,11 @@ public class EnemyFactory {
         };
     }
 
-
     public AbstractEnemy createRandomNormalEnemy() {
-        // 随机选一种普通敌机枚举
         EnemyAircraftType randomType = NORMAL_ENEMY_TYPES[random.nextInt(NORMAL_ENEMY_TYPES.length)];
         return createEnemy(randomType);
     }
 
-    // -------------- 辅助方法适配枚举 --------------
     private int calculateInitX(EnemyAircraftType enemyType) {
         int imageWidth = getEnemyImageWidth(enemyType);
         return random.nextInt(Main.WINDOW_WIDTH - imageWidth);

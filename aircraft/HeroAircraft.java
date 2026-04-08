@@ -2,53 +2,73 @@ package edu.hitsz.aircraft;
 
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.bullet.HeroBullet;
+import edu.hitsz.strategy.SingleStraightShoot;
+import edu.hitsz.strategy.TripleStraightShoot;
+import edu.hitsz.strategy.FiveFanScatterShoot;
+import edu.hitsz.strategy.CircleShootStrategy;
 
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * 英雄飞机，游戏玩家操控
- * @author hitsz
- */
 public class HeroAircraft extends AbstractAircraft {
 
-    //每次射击发射子弹数量
     private int shootNum = 1;
-
-    //子弹威力
     private int power = 30;
-
-    //子弹射击方向 (向上发射：-1，向下发射：1)
     private int direction = -1;
+    private int fireLevel = 0;
 
     public HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
+        this.shootStrategy = new SingleStraightShoot();
+        this.power = 10;
     }
 
     @Override
     public void forward() {
-        // 英雄机由鼠标控制，不通过forward函数移动
+    }
+
+    public void powerUp(int level) {
+        this.fireLevel = level;
+        if (level >= 3) {
+            this.shootStrategy = new CircleShootStrategy();
+            this.power = 25;
+        } else if (level >= 2) {
+            this.shootStrategy = new FiveFanScatterShoot();
+            this.power = 20;
+        } else if (level >= 1) {
+            this.shootStrategy = new TripleStraightShoot();
+            this.power = 15;
+        } else {
+            this.shootStrategy = new SingleStraightShoot();
+            this.power = 10;
+        }
+    }
+
+    public void powerDown() {
+        this.fireLevel = 0;
+        this.shootStrategy = new SingleStraightShoot();
+        this.power = 10;
+    }
+
+    public int getFireLevel() {
+        return fireLevel;
     }
 
     @Override
-    /**
-     * 通过射击产生子弹
-     * @return 射击出的子弹List
-     */
     public List<BaseBullet> shoot() {
-        List<BaseBullet> res = new LinkedList<>();
-        int x = this.getLocationX();
-        int y = this.getLocationY() + direction*2;
-        int speedX = 0;
-        int speedY = this.getSpeedY() + direction*5;
-        BaseBullet bullet;
-        for(int i=0; i<shootNum; i++){
-            // 子弹发射位置相对飞机位置向前偏移
-            // 多个子弹横向分散
-            bullet = new HeroBullet(x + (i*2 - shootNum + 1)*10, y, speedX, speedY, power);
-            res.add(bullet);
+        List<BaseBullet> bullets = shootStrategy.shoot(this);
+        List<BaseBullet> heroBullets = new LinkedList<>();
+        for (BaseBullet bullet : bullets) {
+            HeroBullet heroBullet = new HeroBullet(
+                bullet.getLocationX(),
+                bullet.getLocationY(),
+                bullet.getSpeedX(),
+                bullet.getSpeedY() * -1,
+                bullet.getPower()
+            );
+            heroBullets.add(heroBullet);
         }
-        return res;
+        return heroBullets;
     }
 
 }

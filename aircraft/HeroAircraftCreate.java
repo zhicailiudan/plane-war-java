@@ -5,7 +5,7 @@ import edu.hitsz.utils.ImageManager;
 
 
 public class HeroAircraftCreate {
-    private volatile static HeroAircraftCreate = instance;
+    private volatile static HeroAircraftCreate instance;
     private HeroAircraft heroAircraft;
 
     private HeroAircraftCreate () {
